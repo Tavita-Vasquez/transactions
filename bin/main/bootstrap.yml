@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: transactionservice
+  cloud:
+    config:
+      uri: http://localhost:8888
+      username: tvasquez
+      password: tvasquez
+
