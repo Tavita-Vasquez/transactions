@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.everis.mstransact.config.Configtransaction;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.model.Transaction;
@@ -15,6 +18,7 @@ import ws.rest.springcloud.model.request.AccdepositRequest;
 import ws.rest.springcloud.model.request.AccwithdrawRequest;
 import ws.rest.springcloud.model.request.Creditconsumerequest;
 import ws.rest.springcloud.model.request.Creditpaymentrequest;
+import ws.rest.springcloud.model.request.Updatetransactionreq;
 import ws.rest.springcloud.repository.ITransactionrepo;
 
 @Service
@@ -44,7 +48,7 @@ public class TransactionServiceImpl {
 							                    .prodid(then.getId())
 							                    .prodtype(then.getAcctype())
 							                    .transtype("WITHDRAW")
-							                    .titular(mwithdrawrequest.getTitular())
+							                    .idHeadLine(mwithdrawrequest.getTitular())
 							                    .amount(mwithdrawrequest.getAmount())
 							                    .commission(mwithdrawrequest.getCommission())
 							                    .postamount(then.getSaldo())
@@ -52,6 +56,29 @@ public class TransactionServiceImpl {
 	}
 	
 
+	public Mono<Transaction> moneydeposit(AccdepositRequest mdepositrequest, Mono<AccountDto> account, WebClient webclient) {
+		return account.filter(acc-> acc.getTitular().contains(mdepositrequest.getTitular()))
+		              .switchIfEmpty(Mono.error(new Exception("Titular not found")))
+				      .flatMap(acc-> transacrepo.countByTitular(mdepositrequest.getTitular())
+				    		  .flatMap(count ->
+				              {      mdepositrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_DEPOSIT_VALUE:0); 
+				    		         acc.setSaldo(acc.getSaldo() + mdepositrequest.getAmount()-mdepositrequest.getCommission());
+					    	         return webclient.put().body(BodyInserters.fromValue(acc)).retrieve().bodyToMono(AccountDto.class);
+			                  })
+				      ) 
+				      .switchIfEmpty(Mono.error(new Exception("Error refresh account")))
+				      .flatMap(then->               transacrepo.save(Transaction.builder()
+								                    .prodid(then.getId())
+								                    .prodtype(mdepositrequest.getProdtype())
+								                    .transtype("DEPOSIT")
+								                    .idHeadLine(mdepositrequest.getTitular())
+								                    .amount(mdepositrequest.getAmount())
+								                    .commission(mdepositrequest.getCommission())
+								                    .postamount(then.getSaldo())
+								                    .build()));
+	}
+	
+	 
 
 	public Mono<Transaction> creditpayment(Creditpaymentrequest cpaymentrequest, Mono<CreditDto> credit, WebClient credwebclient) { 
 		return  credit.filter(cred-> cred.getTitular().contains(cpaymentrequest.getTitular()))
@@ -63,11 +90,11 @@ public class TransactionServiceImpl {
 					return credwebclient.put().body(BodyInserters.fromValue(refresh)).retrieve().bodyToMono(CreditDto.class) ;
 				})
 				 .switchIfEmpty(Mono.error(new Exception("Error refresh credit")))
-				 .flatMap(then -> transacrepo.save(Transaction.builder
+				 .flatMap(then -> transacrepo.save(Transaction.builder()
 								                    .prodid(then.getId())
 								                    .prodtype(then.getCredittype())
 								                    .transtype("PAYMENT")
-								                    .titular(cpaymentrequest.getTitular())
+								                    .idHeadLine(cpaymentrequest.getTitular())
 								                    .amount(cpaymentrequest.getAmount())
 								                    .postamount(then.getBaseline()-then.getConsume())
 								                    .build()));
@@ -87,7 +114,7 @@ public class TransactionServiceImpl {
 								                    .prodid(then.getId())
 								                    .prodtype(then.getCredittype())
 								                    .transtype("CONSUME")
-								                    .titular(cconsumerequest.getTitular())
+								                    .idHeadLine(cconsumerequest.getTitular())
 								                    .amount(cconsumerequest.getAmount())
 								                    .postamount(then.getBaseline()-then.getConsume())
 								                    .build()));
@@ -116,8 +143,23 @@ public class TransactionServiceImpl {
 	public Mono<Transaction> findtransactionbyid(String id) { 
 		return transacrepo.findById(id)
 				          .switchIfEmpty(Mono.error(new Exception("Not found transaction")));
-	} 
+	}
+	
+	public Mono<Transaction> updatetransaction(Updatetransactionreq updatetransacreq) { 
+		return transacrepo.findById(updatetransacreq.getId())
+				.switchIfEmpty(Mono.error(new Exception("not found")))
+				.flatMap(a-> transacrepo.save(Transaction.builder()
+	                       .id(a.getId())
+	                       .prodid(updatetransacreq.getId())
+	                   	   .prodtype(updatetransacreq.getProdtype()) 
+	                   	   .transtype(updatetransacreq.getTranstype())
+	                   	   .idHeadLine(updatetransacreq.getTitular())
+	                   	   .amount(updatetransacreq.getAmount())
+	                   	   .commission(updatetransacreq.getCommission())
+	                   	   .postamount(updatetransacreq.getPostamount()) 
+	                       .build()));
+	}
 	
 	
-	
+
 }

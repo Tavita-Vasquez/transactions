@@ -19,5 +19,6 @@ public class Updatetransactionreq {
 	private Double amount; 
 	private Double postamount; 
 	private Double commission;
+	 
 
 }
