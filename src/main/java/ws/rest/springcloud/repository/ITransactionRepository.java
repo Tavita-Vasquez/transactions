@@ -9,9 +9,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.model.Transaction;
 
-public interface ITransactionrepo extends ReactiveMongoRepository<Transaction, String> {
+public interface ITransactionRepository extends ReactiveMongoRepository<Transaction, String> {
 
 	Flux<Transaction> findByTitularAndTransactdateBetween(String idHeadLine, LocalDate dateIni, LocalDate dateEnd);
-	Mono<Long> countByTitular(String titular);
+	Mono<Long> countTransacByheadline();
+	Mono<Long> countTransacByTitular(String idHeadLine);
 	
 }

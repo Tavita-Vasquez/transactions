@@ -1,6 +1,8 @@
 package ws.rest.springcloud.model.request;
  
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,10 +15,11 @@ public class Updatetransactionreq {
 	
 	private String id;
 	private String prodid;
-	private String prodtype;
+	private String prodtype;//Account Bank o Credit Card
 	private String transtype;
 	private String titular;
-	private Double amount; 
+	private Double amount;
+    private LocalDateTime transactdate;
 	private Double postamount; 
 	private Double commission;
 	 

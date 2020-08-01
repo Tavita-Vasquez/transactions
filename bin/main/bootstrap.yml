@@ -1,9 +1,8 @@
 spring:
   application:
-    name: transactionservice
+    name: transactservice
   cloud:
     config:
-      uri: http://localhost:8888
-      username: tvasquez
-      password: tvasquez
-
+      uri: http://localhost:8081
+      username: carlos
+      password: carlos
