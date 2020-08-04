@@ -34,13 +34,13 @@ public class MstransactionController {
 	
 	@Autowired
 	private TransactionServiceImpl transactservice;
-	private static final String URL_ACCOUNT= "http://localhost:8020/apiaccount";
-	private static final String URL_CREDIT= "http://localhost:8020/apicredit";
+	private static final String URL_ACCOUNT= "http://localhost:8031/rest/bankAccount/findById";
+	private static final String URL_CREDIT= "http://localhost:8030/rest/personalCustomer/findById";
 	
 	/*Realizar un retiro de dinero de una cuenta*/
 	@PostMapping("/withdraw")
 	public  Mono<Transaction> moneywithdraw(@RequestBody AccwithdrawRequest mwithdrawrequest){ 
-		Mono<BankAccountDto> accountReq = WebClient.create(URL_ACCOUNT + "/findacc/"+mwithdrawrequest.getId())
+		Mono<BankAccountDto> accountReq = WebClient.create(URL_ACCOUNT + "/findById/"+mwithdrawrequest.getId())
 				                            .get().retrieve().bodyToMono(BankAccountDto.class);  
 		return transactservice.moneywithdraw(mwithdrawrequest,accountReq, WebClient.create(URL_ACCOUNT+ "/updateaccount"));
 	}

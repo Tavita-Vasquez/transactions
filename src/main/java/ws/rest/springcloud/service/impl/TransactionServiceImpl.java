@@ -7,9 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import com.everis.mstransact.config.Configtransaction; 
-
+import com.everis.mstransact.config.Configtransaction;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.model.Transaction; 
@@ -30,53 +28,75 @@ public class TransactionServiceImpl implements ITransactionService {
 	@Autowired
 	private ITransactionRepository repository;
 
-	/*
-	 * @Override public Mono<Transaction> moneywithdraw(AccwithdrawRequest
-	 * mwithdrawrequest, Mono<BankAccountDto> account, WebClient accwebclient) {
-	 * return account.filter(acc->
-	 * acc.getHeadline().contains(mwithdrawrequest.getTitular()))
-	 * .switchIfEmpty(Mono.error(new Exception("HeadLine not found")))
-	 * .flatMap(acc->
-	 * repository.countTransacByTitular((mwithdrawrequest.getTitular()).map(count ->
-	 * {
-	 * mwithdrawrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES
-	 * ?Configtransaction.COMMISSION_WITHDRAW_VALUE:0); return acc; }) )
-	 * .filter(acc->
-	 * acc.getBalance()-mwithdrawrequest.getAmount()-mwithdrawrequest.getCommission(
-	 * )>=0) .switchIfEmpty(Mono.error(new Exception("Dont have enought money")))
-	 * .flatMap(refresh-> { refresh.setBalance(refresh.getBalance()-
-	 * mwithdrawrequest.getAmount()-mwithdrawrequest.getCommission()); return
-	 * webclient.put().body(BodyInserters.fromValue(refresh)).retrieve().bodyToMono(
-	 * AccountDto.class); }) .switchIfEmpty(Mono.error(new
-	 * Exception("Error update account"))) .flatMap(then->
-	 * repository.save(Transaction.builder() .prodid(then.getId())
-	 * .prodtype(then.getAcctype()) .transtype("WITHDRAW")
-	 * .titular(mwithdrawrequest.getTitular()) .amount(mwithdrawrequest.getAmount())
-	 * .commission(mwithdrawrequest.getCommission()) .postamount(then.getBalance())
-	 * .build())); }
-	 */
-
 	
-	/*
-	 * public Mono<Transaction> moneydeposit(AccdepositRequest mdepositrequest,
-	 * Mono<BankAccountDto> account,WebClient accwebclient) { return
-	 * account.filter(acc->acc.getHeadline().contains(mdepositrequest.getTitular()))
-	 * .switchIfEmpty(Mono.error(new Throwable("Headline not found")))
-	 * .flatMap(acc-> repository.countTransacByTitular(mdepositrequest.getTitular())
-	 * .flatMap(count -> {
-	 * mdepositrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?
-	 * Configtransaction.COMMISSION_DEPOSIT_VALUE:0);
-	 * acc.setAvailablebalance(acc.getAvailablebalance()+mdepositrequest.getAmount()
-	 * -mdepositrequest.getCommission()); return
-	 * webclient.put().body(BodyInserters.fromValue(acc)).retrieve().bodyToMono(
-	 * BankAccountDto.class); }) ) .switchIfEmpty(Mono.error(new
-	 * Exception("Error refresh account"))) .flatMap(then->
-	 * repository.save(Transaction.builder() .prodid(then.getId())
-	 * .prodtype(mdepositrequest.getProdtype()) .transtype("DEPOSIT")
-	 * .titular(mdepositrequest.getTitular()) .amount(mdepositrequest.getAmount())
-	 * .commission(mdepositrequest.getCommission()) .postamount(then.getSaldo())
-	 * .build())); }
-	 */
+	/*Se verifica la cuenta retornada si contiene el titular que hizo la peticion*/
+	/*Luego se hace un conteo de sus transacciones realizadas y si son mayores a un COMMISSION_FREE_TIMES, entonces le pone una comision */
+	/*Despues se filtra si el monto a retirar con comision es mayor al saldo de la cuenta*/
+	/*Luego se actualiza el saldo con los nuevos valores en el microservicio de account*/
+	/*Se registra la transaccion como withdraw*/
+	
+	public Mono<Transaction> moneywithdraw(AccwithdrawRequest mwithdrawrequest, Mono<BankAccountDto> account,
+			WebClient accwebclient){ 
+		return account.filter(acc-> acc.getHeadline().contains(mwithdrawrequest.getTitular()))
+			      .switchIfEmpty(Mono.error(new Exception("Titular not found")))
+			      .flatMap(acc-> 
+			      repository.countTransacByTitular(mwithdrawrequest.getTitular()).switchIfEmpty(Mono.error(new Exception("problema"))).log().map(count ->
+			    	  {   mwithdrawrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_WITHDRAW_VALUE:0);  
+			    	      return acc;
+			    	  }) 
+			      )
+			      .filter(acc-> acc.getAvailablebalance()-mwithdrawrequest.getAmount()-mwithdrawrequest.getCommission()>=0)
+			      .switchIfEmpty(Mono.error(new Exception("Dont have enought money"))) //no hay saldo disponible...
+			      .flatMap(refresh-> {//sino si hay saldo disponible actualizar el setAvailablebalance (saldo disponible)
+			    	  refresh.setAvailablebalance(refresh.getAvailablebalance()-mwithdrawrequest.getAmount()-mwithdrawrequest.getCommission());//(refresh.getAvailablebalance()- mwithdrawrequest.getAmount()-mwithdrawrequest.getCommission());
+			    	  return accwebclient.put().body(BodyInserters.fromValue(refresh)).retrieve().bodyToMono(BankAccountDto.class);
+			      })
+			      .switchIfEmpty(Mono.error(new Exception("Error refresh account")))
+			      .flatMap(then->            repository.save(Transaction.builder()
+						                    .prodid(then.getId())
+						                    .prodtype(then.getAcctype())
+						                    .transtype("WITHDRAW")
+						                    .idHeadLine(mwithdrawrequest.getTitular())
+						                    .amount(mwithdrawrequest.getAmount())
+						                    .commission(mwithdrawrequest.getCommission())
+						                    .postamount(then.getAvailablebalance())
+						                    .build())); 
+	}
+	
+	/*Se verifica la cuenta retornada si contiene el titular que hizo la peticion*/
+	/*Luego se hace un conteo de sus transacciones realizadas y si son mayores a un COMMISSION_FREE_TIMES, entonces le pone una comision */ 
+	/*Luego se actualiza el saldo con los nuevos valores en el microservicio de account*/
+	/*Se registra la transaccion como deposit*/
+	@Override
+	public Mono<Transaction> moneydeposit(AccdepositRequest mdepositrequest, Mono<BankAccountDto> account,
+			WebClient accwebclient) {
+		return account.filter(acc-> acc.getHeadline().contains(mdepositrequest.getTitular()))
+		              .switchIfEmpty(Mono.error(new Exception("Titular not found")))
+				      .flatMap(acc-> repository.countTransacByTitular(mdepositrequest.getTitular())//(mdepositrequest.getTitular())
+				    		  .flatMap(count ->
+				              {      mdepositrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_DEPOSIT_VALUE:0); 
+				    		         acc.setAvailablebalance(acc.getBalancetotal()+mdepositrequest.getAmount()-mdepositrequest.getCommission());//(acc.getBalance() + mdepositrequest.getAmount()-mdepositrequest.getCommission());
+					    	         return accwebclient.put().body(BodyInserters.fromValue(acc)).retrieve().bodyToMono(BankAccountDto.class);
+			                  })
+				      )  
+				      .switchIfEmpty(Mono.error(new Exception("Error refresh account")))
+				      .flatMap(then->               repository.save(Transaction.builder()
+								                    .prodid(then.getId())
+								                    .prodtype(then.getAcctype())
+								                    .transtype("DEPOSIT")
+								                    .idHeadLine(mdepositrequest.getTitular())
+								                    .amount(mdepositrequest.getAmount())
+								                    .commission(mdepositrequest.getCommission())
+								                    .postamount(then.getAvailablebalance())
+								                    .build()));
+	}
+	
+	/* Se verifica el credito retornado si contiene el titular que hizo la peticion*/
+	/*Se filtra si el consumo de la peticion es mayor a la linea base del credito menos el consumo ya realizado anteriormente*/ 
+	/*Luego se actualiza el credito con los nuevos valores en el microservicio de credit*/
+	/*Se registra un consumo y se asigna como fecha de pago el dia final del mes siguiente*/
+	/*Se registra la transaccion como consumo*/
+	
 	@Override
 	public Mono<Transaction> creditpayment(Creditpaymentrequest cpaymentrequest, Mono<CreditDto> credit,
 			WebClient credwebclient) {
@@ -157,19 +177,9 @@ public class TransactionServiceImpl implements ITransactionService {
 		return null;
 	}
 
-	@Override
-	public Mono<Transaction> moneywithdraw(AccwithdrawRequest mwithdrawrequest, Mono<BankAccountDto> account,
-			WebClient accwebclient) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Mono<Transaction> moneydeposit(AccdepositRequest mdepositrequest, Mono<BankAccountDto> account,
-			WebClient accwebclient) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
+	 
+ 
 
  
 	
