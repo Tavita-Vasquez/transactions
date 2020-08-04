@@ -3,6 +3,6 @@ spring:
     name: transactservice
   cloud:
     config:
-      uri: http://localhost:8083
+      uri: http://localhost:8081
       username: carlos
       password: carlos
