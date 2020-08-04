@@ -26,10 +26,17 @@ public interface ITransactionService{
 	  Mono<Transaction> transferpayment(Transferpaymentrequest tpaymentrequest, Mono<BankAccountDto> account, Mono<CreditDto> credit, WebClient accwebclient,  WebClient credwebclient);
 	  
 	  Mono<Void> deletetransaction(String id); 
-	  Flux<Transaction> findtransaction();
-	  Flux<Transaction> findclienttransaction(String titular,  LocalDate  date1,  LocalDate date2);
-	  Mono<Transaction> findtransactionbyid(String id);
-	  Mono<Transaction> updatetransaction(Updatetransactionreq updatetransactionreq);
+	  Flux<Transaction> findtransaction();	
+	   Mono<Transaction> updatetransaction(Updatetransactionreq updatetransactionreq);
 	// Mono delete(String id); 
 	  Mono<Boolean> checkforexpiredcredit(String titular);
+	  
+	  
+	  //Reports :
+	  
+	  Flux<Transaction> findclienttransaction(String titular,  LocalDate  date1,  LocalDate date2);
+	  Mono<Transaction> findtransactionbyid(String id);
+		 
+	  
+	  
 }
