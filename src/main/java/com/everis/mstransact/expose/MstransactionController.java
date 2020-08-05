@@ -34,8 +34,8 @@ public class MstransactionController {
 	
 	@Autowired
 	private TransactionServiceImpl transactservice;
-	private static final String URL_ACCOUNT= "http://localhost:8031/rest/bankAccount/findById";
-	private static final String URL_CREDIT= "http://localhost:8030/rest/personalCustomer/findById";
+	private static final String URL_ACCOUNT= "http://localhost:8031/rest/bankAccount";
+	private static final String URL_CREDIT= "http://localhost:8030/rest/personalCustomer";
 	
 	/*Realizar un retiro de dinero de una cuenta*/
 	@PostMapping("/withdraw")

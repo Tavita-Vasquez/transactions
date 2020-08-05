@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.model.Transaction;
+import ws.rest.springcloud.model.dto.ATMTransactionDTO;
 import ws.rest.springcloud.model.dto.BankAccountDto;
 import ws.rest.springcloud.model.dto.CreditDto;
 import ws.rest.springcloud.model.request.AccdepositRequest;
@@ -16,9 +17,13 @@ import ws.rest.springcloud.model.request.Creditconsumerequest;
 import ws.rest.springcloud.model.request.Creditpaymentrequest;
 import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
+import ws.rest.springcloud.model.response.TransactionResponse;
 
 public interface ITransactionService{
 	
+	  Mono<TransactionResponse> depositatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc, WebClient webclient);
+	  Mono<TransactionResponse> withdrawatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc, WebClient webclient);
+	  
 	  Mono<Transaction> moneywithdraw(AccwithdrawRequest mwithdrawrequest, Mono<BankAccountDto> account,WebClient accwebclient);
 	  Mono<Transaction> moneydeposit(AccdepositRequest mdepositrequest, Mono<BankAccountDto> account, WebClient accwebclient);
 	  Mono<Transaction> creditpayment(Creditpaymentrequest cpaymentrequest, Mono<CreditDto> credit, WebClient credwebclient);
@@ -29,14 +34,13 @@ public interface ITransactionService{
 	  Flux<Transaction> findtransaction();	
 	   Mono<Transaction> updatetransaction(Updatetransactionreq updatetransactionreq);
 	// Mono delete(String id); 
-	  Mono<Boolean> checkforexpiredcredit(String titular);
-	  
+	  Mono<Boolean> checkforexpiredcredit(String titular);  
 	  
 	  //Reports :
 	  
 	  Flux<Transaction> findclienttransaction(String titular,  LocalDate  date1,  LocalDate date2);
 	  Mono<Transaction> findtransactionbyid(String id);
 		 
-	  
+	
 	  
 }

@@ -22,6 +22,6 @@ public class CreditDto {
 	private Double availablebalance; //saldo disponible.
 	private Double consume;
 	private LocalDate datecredit;
-	
+	private String bank;
 		
 }

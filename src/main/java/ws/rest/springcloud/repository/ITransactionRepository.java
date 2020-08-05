@@ -13,6 +13,6 @@ public interface ITransactionRepository extends ReactiveMongoRepository<Transact
 
 	Flux<Transaction> findByTitularAndTransactdateBetween(String idHeadLine, LocalDate dateIni, LocalDate dateEnd);
 	Mono<Long> countTransacByheadline();
-	Mono<Long> countTransacByTitular(String idHeadLine);
+	Mono<Long> countTransacByTitular(String idHeadLine); // count transactions of one headline...
 	
 }
