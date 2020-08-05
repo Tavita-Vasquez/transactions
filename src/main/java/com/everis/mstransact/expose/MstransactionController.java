@@ -22,20 +22,21 @@ import ws.rest.springcloud.model.dto.BankAccountDto;
 import ws.rest.springcloud.model.dto.CreditDto;
 import ws.rest.springcloud.model.request.AccdepositRequest;
 import ws.rest.springcloud.model.request.AccwithdrawRequest;
+import ws.rest.springcloud.model.request.Creditconsumerequest;
 import ws.rest.springcloud.model.request.Creditpaymentrequest;
 import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
 import ws.rest.springcloud.service.impl.TransactionServiceImpl;
 
+@RequestMapping("/rest/apitransaction") 
 @RestController
-@RequestMapping("/apitransaction") 
-
 public class MstransactionController {
 	
 	@Autowired
 	private TransactionServiceImpl transactservice;
 	private static final String URL_ACCOUNT= "http://localhost:8031/rest/bankAccount";
-	private static final String URL_CREDIT= "http://localhost:8030/rest/personalCustomer";
+	private static final String URL_CUSTOMER= "http://localhost:8030/rest/personalCustomer";
+	private static final String URL_CREDIT="http://localhost:8033/rest/credit";
 	
 	/*Realizar un retiro de dinero de una cuenta*/
 	@PostMapping("/withdraw")
@@ -44,6 +45,33 @@ public class MstransactionController {
 				                            .get().retrieve().bodyToMono(BankAccountDto.class);  
 		return transactservice.moneywithdraw(mwithdrawrequest,accountReq, WebClient.create(URL_ACCOUNT+ "/updateaccount"));
 	}
+
+	
+	/*Depositar a una cuenta*/
+	@PostMapping("/deposit")
+	public Mono<Transaction> moneydeposit(@RequestBody AccdepositRequest mdepositrequest){
+		Mono<BankAccountDto> accountReq = WebClient.create( URL_ACCOUNT + "/findacc/"+mdepositrequest.getId())
+                .get().retrieve().bodyToMono(BankAccountDto.class);
+		return transactservice.moneydeposit(mdepositrequest, accountReq, WebClient.create(URL_ACCOUNT + "/updateaccount"));
+	}
+	
+	/*Depositar a una cuenta*/
+	@PostMapping("/payment")
+	public Mono<Transaction> creditpayment(@RequestBody Creditpaymentrequest cpaymentrequest){
+		Mono<CreditDto> credit = WebClient.create( URL_CREDIT + "/findcred/"+cpaymentrequest.getId())
+                .get().retrieve().bodyToMono(CreditDto.class);
+		return transactservice.creditpayment(cpaymentrequest, credit, WebClient.create(URL_CREDIT + "/updatecredit"));
+	}
+	
+	
+	/*Realizar un consumo a un producto de credito*/
+	@PostMapping("/consume")
+	public Mono<Transaction> creditconsume(@RequestBody Creditconsumerequest cconsumerequest){
+		Mono<CreditDto> credit = WebClient.create( URL_CREDIT + "/findcred/"+cconsumerequest.getId())
+                .get().retrieve().bodyToMono(CreditDto.class);
+		return transactservice.creditconsume(cconsumerequest, credit, WebClient.create(URL_CREDIT + "/updatecredit"));
+	}
+	
 	
 	/*Eliminar de un cuenta*/
 	@DeleteMapping("/delete/{id}")
@@ -68,8 +96,8 @@ public class MstransactionController {
 	/*Busqueda de transacciones por fecha*/
 	@GetMapping("/findbytitular/{titular}") 
 	public Flux<Transaction> findtitulartransaction(@PathVariable String titular,
-		  @RequestParam(name = "date1", defaultValue ="01/01/1980" )@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate  date1,
-  	      @RequestParam(name = "date2", defaultValue = "01/01/4000") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate date2){
+		  @RequestParam(name = "date1", defaultValue ="01/01/1988" )@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate  date1,
+  	      @RequestParam(name = "date2", defaultValue = "01/01/2020") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate date2){
 	      return transactservice.findclienttransaction(titular, date1, date2);
     }
 	
