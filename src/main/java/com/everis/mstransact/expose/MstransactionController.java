@@ -23,6 +23,7 @@ import ws.rest.springcloud.model.dto.CreditDto;
 import ws.rest.springcloud.model.request.AccdepositRequest;
 import ws.rest.springcloud.model.request.AccwithdrawRequest;
 import ws.rest.springcloud.model.request.Creditconsumerequest;
+import ws.rest.springcloud.model.request.Creditpaymentmultibankrequest;
 import ws.rest.springcloud.model.request.Creditpaymentrequest;
 import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
@@ -108,6 +109,24 @@ public class MstransactionController {
       return transactservice.updatetransaction(updatetransactionreq);
     }
     
-    
+  	/*Pago de un credito mediante transferencia de una cuenta del mismo banco*/
+	@PostMapping("/transferpayment")
+	public Mono<Transaction> transferpayment(@RequestBody Transferpaymentrequest tpaymentrequest){
+		
+		return null;
+	}
+	
+	/*Pago de un credito mediante transferencia de una cuenta del mismo banco a otra cuenta de otro banco*/
+	@PostMapping("/transferpaymultibank")
+	public Mono<Transaction> transferpaymultibank(@RequestBody Transferpaymentrequest tpaymentrequest){
+		Mono<BankAccountDto> account = WebClient.create( URL_ACCOUNT + "/findacc/"+tpaymentrequest.getAccountid())
+                .get().retrieve().bodyToMono(BankAccountDto.class); 
+		Mono<CreditDto> credit = WebClient.create( URL_CREDIT + "/findcred/"+tpaymentrequest.getCreditid())
+                .get().retrieve().bodyToMono(CreditDto.class);
+		return transactservice.multibankTransPay(tpaymentrequest, account, credit, WebClient.create(URL_ACCOUNT + "/updateaccount"), WebClient.create(URL_CREDIT + "/updatecredit"));
+	}
+	
+	
+	
  
 }

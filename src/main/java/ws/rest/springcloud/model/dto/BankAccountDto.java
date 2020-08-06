@@ -23,6 +23,6 @@ public class BankAccountDto {
 	private Double balancetotal;
 	private String acctypedesc;
 	private LocalDate dateaccount;
-	
+	private String bankId; // codigo del banco al que realizará el pago de credito
 		
 }

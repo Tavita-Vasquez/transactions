@@ -16,7 +16,9 @@ public class Transferpaymentrequest {
 	private String prodtype; 
 	private String credittitular;
 	private Double amount;
-	private Double commission;
-	
+	private Double commission;	
+	private String  titular;
+	private String  atmbank;
+	private String  productid; 
 
 }

@@ -14,6 +14,7 @@ import ws.rest.springcloud.model.dto.CreditDto;
 import ws.rest.springcloud.model.request.AccdepositRequest;
 import ws.rest.springcloud.model.request.AccwithdrawRequest;
 import ws.rest.springcloud.model.request.Creditconsumerequest;
+import ws.rest.springcloud.model.request.Creditpaymentmultibankrequest;
 import ws.rest.springcloud.model.request.Creditpaymentrequest;
 import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
@@ -41,6 +42,12 @@ public interface ITransactionService{
 	  Flux<Transaction> findclienttransaction(String titular,  LocalDate  date1,  LocalDate date2);
 	  Mono<Transaction> findtransactionbyid(String id);
 		 
+	 /*El sistema deberá permitir el pago de tarjetas de créditos de 
+	 diferentes bancos pertenecientes al sistema y debitar el pago a 
+	 una cuenta que pertenezca a un banco diferente al banco que pertenezca la tarjeta de crédito.*/
+	  Mono<Transaction> creditpaymentmultiBank(Creditpaymentmultibankrequest cpaymentmultibankrequest , Mono<BankAccountDto> accountpayment, Mono<CreditDto> creditpayment,WebClient accwebclient, WebClient credwebclient);
 	
+	  Mono<Transaction> multibankTransPay(Transferpaymentrequest tpaymentrequest, Mono<BankAccountDto> account,
+			Mono<CreditDto> credit, WebClient accwebclient, WebClient credwebclient);
 	  
 }

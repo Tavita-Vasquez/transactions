@@ -37,5 +37,5 @@ public class Transaction {
 	private Double amount; 
 	private Double commission;
 	private Double postamount;
-	
+	private String bank;
 }

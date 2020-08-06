@@ -20,6 +20,7 @@ import ws.rest.springcloud.model.dto.CreditDto;
 import ws.rest.springcloud.model.request.AccdepositRequest;
 import ws.rest.springcloud.model.request.AccwithdrawRequest;
 import ws.rest.springcloud.model.request.Creditconsumerequest;
+import ws.rest.springcloud.model.request.Creditpaymentmultibankrequest;
 import ws.rest.springcloud.model.request.Creditpaymentrequest;
 import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
@@ -264,32 +265,107 @@ public class TransactionServiceImpl implements ITransactionService {
 
 	 
 
-	@Override
-	public Mono<Boolean> checkforexpiredcredit(String titular) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Mono<TransactionResponse> depositatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc,
-			WebClient webclient) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Mono<TransactionResponse> withdrawatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc,
-			WebClient webclient) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	
-	 
- 
 
- 
-	
-	
-	
+	//Pago de una tarjeta de credito desde otra cuenta bancaria no perteneciente al mismo banco
+		@Override
+		public Mono<Transaction> multibankTransPay(Transferpaymentrequest tpaymentrequest,  Mono<BankAccountDto> account, Mono<CreditDto> credit, WebClient accwebclient,  WebClient credwebclient){
+			return  account.filter(acc->acc.getHeadline().contains(tpaymentrequest.getAccounttitular()))
+					.switchIfEmpty(Mono.error(new Exception("Not same account holder - transferpayment")))
+					.flatMap(acc-> 
+			    	  transactionrepo.countTransacByTitular(tpaymentrequest.getAccounttitular()).map(count ->
+			    	  {   tpaymentrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_WITHDRAW_VALUE:0);  
+			    	      return acc;
+			    	  }) 
+			         )
+					.filter(acc-> acc.getAvailablebalance()-tpaymentrequest.getAmount()-tpaymentrequest.getCommission()>=0)
+					        .switchIfEmpty(Mono.error(new Exception("Cant process the transaction - low account balance")))
+					.then(credit)
+					.filter(cred-> cred.getCredittype().equalsIgnoreCase("CRE4")||cred.getCredittype().equalsIgnoreCase("CRE3"))
+		           			.switchIfEmpty(Mono.error(new Exception("Credit not credit card")))		
+					.filter(cred-> cred.getHeadline().contains(tpaymentrequest.getCredittitular()))
+					        .switchIfEmpty(Mono.error(new Exception("Not same credit holder - transferpayment")))
+					.filter(cred -> (cred.getConsume()-tpaymentrequest.getAmount())>=0)
+					        .switchIfEmpty(Mono.error(new Exception("Cant process the transaction - amount")))
+					.flatMap(cre->{
+	   			            cre.setConsume(cre.getConsume()-tpaymentrequest.getAmount());
+						      return credwebclient.put().body(BodyInserters.fromValue(cre)).retrieve().bodyToMono(CreditDto.class) ;
+					})
+					.switchIfEmpty(Mono.error(new Exception("Cant process the transcation - credit")))
+					.flatMap(cre->transactionrepo.save(Transaction.builder()
+		                         .prodid(cre.getId())
+		                   	     .prodtype(tpaymentrequest.getProdtype()) 
+		                   	     .transtype("TRANSPAYMENT")
+		                   	     .idHeadLine(tpaymentrequest.getCredittitular())
+				                 .bank(cre.getBank())
+		                   	     .amount(tpaymentrequest.getAmount())
+		                   	     .commission(tpaymentrequest.getCommission())
+		                   	     .postamount(cre.getConsume()-tpaymentrequest.getAmount()-tpaymentrequest.getCommission()) 
+		                         .build()))
+					.switchIfEmpty(Mono.error(new Exception("Cant process the transaction - creditransaction")))
+					.flatMap(transaction-> {
+						AtomicDouble amountss=new AtomicDouble();
+						amountss.set(transaction.getAmount());
+						return consumerepo.findByProductidAndPayedOrderByMonthAsc(transaction.getProdid(), false)  
+						                  .map(consum ->{ 
+						                	  if(amountss.doubleValue()>=consum.getNotpayedamount()){ 
+						                		  amountss.set(amountss.doubleValue()-consum.getNotpayedamount());
+						                		  consum.setNotpayedamount(0d);
+						                		  consum.setPayed(true);
+						                 	  }else{ 
+						                	      consum.setNotpayedamount(consum.getNotpayedamount()-amountss.get());
+						                		  amountss.set(0d); 
+						                	  } 
+						                	  return consum; 
+						                   }).flatMap(consumerepo::save).then()
+						                  .thenReturn(transaction); 
+					  })
+					.then(account)
+					.flatMap(acc-> {
+				    	  acc.setBalancetotal(acc.getAvailablebalance()- tpaymentrequest.getAmount()-tpaymentrequest.getCommission());
+				    	  return accwebclient.put().body(BodyInserters.fromValue(acc)).retrieve().bodyToMono(BankAccountDto.class);
+				    	  })
+					.switchIfEmpty(Mono.error(new Exception("Cant process the transaction - account")))
+					.flatMap(then-> transactionrepo.save(Transaction.builder()
+		                    .prodid(then.getId())
+		                    .prodtype(then.getAcctype())
+		                    .transtype("TRANSWITHDRAW")
+		                    .bank(then.getBankId())
+		                    .idHeadLine(tpaymentrequest.getAccounttitular())
+		                    .amount(tpaymentrequest.getAmount())
+		                    .commission(tpaymentrequest.getCommission())
+		                    .postamount(then.getAvailablebalance())
+		                    .build()))
+					 ;
+		}
+
+		@Override
+		public Mono<Transaction> creditpaymentmultiBank(Creditpaymentmultibankrequest cpaymentmultibankrequest,
+				Mono<BankAccountDto> accountpayment, Mono<CreditDto> creditpayment, WebClient accwebclient,
+				WebClient credwebclient) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public Mono<Boolean> checkforexpiredcredit(String titular) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Mono<TransactionResponse> depositatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc,
+				WebClient webclient) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Mono<TransactionResponse> withdrawatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc,
+				WebClient webclient) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		
 }

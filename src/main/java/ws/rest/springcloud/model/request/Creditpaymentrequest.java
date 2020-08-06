@@ -15,6 +15,7 @@ public class Creditpaymentrequest {
 	private String prodtype; 
 	private String titular;
 	private Double amount;
+	
 	public String getId() {
 		return id;
 	}
