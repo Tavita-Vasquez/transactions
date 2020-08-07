@@ -3,13 +3,14 @@ package ws.rest.springcloud.transaction.service;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.context.MessageSource; 
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.google.common.util.concurrent.AtomicDouble;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.transaction.config.Configtransaction;
@@ -30,15 +31,23 @@ import ws.rest.springcloud.transaction.repository.IConsumeRepository;
 import ws.rest.springcloud.transaction.repository.ITransactionRepository;
 
 
-@Service
+
 public class TransactionServiceImpl implements ITransactionService {
 
 	@Autowired
-	private ITransactionRepository transactionrepo;
+	private ITransactionRepository repository;
 
 	@Autowired
 	private IConsumeRepository consumerepo;
 	
+	 @Autowired
+	 MessageSource i18n;
+	 
+	//log
+		private static final Logger log=(Logger) LogManager.getLogger(TransactionServiceImpl.class);
+
+		
+		
 	/*RETIRO DINERO*/
 	/*1. Se valida la petición de usuario que generó la solicitud(http request)*/
 	/*2. Se contabiliza el conteo total de peticiones por cada transactions y comparamos si es > a parameter COMMISSION_FREE_TIMES le añadimos el valor de comission. de lo contrario comission = 0 */
@@ -51,7 +60,7 @@ public class TransactionServiceImpl implements ITransactionService {
 		return account.filter(acc-> acc.getHeadline().contains(mwithdrawrequest.getTitular()))
 			      .switchIfEmpty(Mono.error(new Exception("getHeadLine not found"))) 
 			      .flatMap(acc-> 
-			      transactionrepo.countTransacByTitular(mwithdrawrequest.getTitular()).switchIfEmpty(Mono.error(new Exception("Exceptions."))).log().map(count ->
+			      repository.countTransacByTitular(mwithdrawrequest.getTitular()).switchIfEmpty(Mono.error(new Exception("Exceptions."))).log().map(count ->
 			    	  {   mwithdrawrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_WITHDRAW_VALUE:0);  
 			    	      return acc;
 			    	  }) 
@@ -63,7 +72,7 @@ public class TransactionServiceImpl implements ITransactionService {
 			    	  return accwebclient.put().body(BodyInserters.fromValue(refresh)).retrieve().bodyToMono(BankAccountDto.class);
 			      })
 			      .switchIfEmpty(Mono.error(new Exception("Error refresh account")))
-			      .flatMap(then->            transactionrepo.save(Transaction.builder()
+			      .flatMap(then->            repository.save(Transaction.builder()
 						                    .prodid(then.getId())
 						                    .prodtype(then.getAcctype())
 						                    .transtype("WITHDRAW")
@@ -84,7 +93,7 @@ public class TransactionServiceImpl implements ITransactionService {
 			WebClient accwebclient) {
 		return account.filter(acc-> acc.getHeadline().contains(mdepositrequest.getTitular()))
 		              .switchIfEmpty(Mono.error(new Exception("Titular not found")))
-				      .flatMap(acc-> transactionrepo.countTransacByTitular(mdepositrequest.getTitular())//(mdepositrequest.getTitular())
+				      .flatMap(acc-> repository.countTransacByTitular(mdepositrequest.getTitular())//(mdepositrequest.getTitular())
 				    		  .flatMap(count ->
 				              {      mdepositrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_DEPOSIT_VALUE:0); 
 				    		         acc.setAvailablebalance(acc.getBalancetotal()+mdepositrequest.getAmount()-mdepositrequest.getCommission());//(acc.getBalance() + mdepositrequest.getAmount()-mdepositrequest.getCommission());
@@ -92,7 +101,7 @@ public class TransactionServiceImpl implements ITransactionService {
 			                  })
 				      )  
 				      .switchIfEmpty(Mono.error(new Exception("Error refresh account")))
-				      .flatMap(then->               transactionrepo.save(Transaction.builder()
+				      .flatMap(then->               repository.save(Transaction.builder()
 								                    .prodid(then.getId())
 								                    .prodtype(then.getAcctype())
 								                    .transtype("DEPOSIT")
@@ -125,7 +134,7 @@ public class TransactionServiceImpl implements ITransactionService {
 					return credwebclient.put().body(BodyInserters.fromValue(refresh)).retrieve().bodyToMono(CreditDto.class);
 				})
 				 .switchIfEmpty(Mono.error(new Exception("Error refresh credit")))
-				 .flatMap(then -> transactionrepo.save(Transaction.builder()
+				 .flatMap(then -> repository.save(Transaction.builder()
 		                    .prodid(then.getId())
 		                    .prodtype(then.getCredittype())
 		                    .transtype("PAYMENT")
@@ -181,7 +190,7 @@ public class TransactionServiceImpl implements ITransactionService {
                           .payed(false)
                           .build()).thenReturn(then)
                    )
-			     .flatMap(then->  transactionrepo.save(Transaction.builder()
+			     .flatMap(then->  repository.save(Transaction.builder()
 							                    .prodid(then.getId())
 							                    .prodtype(then.getCredittype())
 							                    .transtype("CONSUME")
@@ -205,12 +214,12 @@ public class TransactionServiceImpl implements ITransactionService {
 	@Override
 	public Mono<Void> deletetransaction(String id) {
 		Mono delete=null;
-		 final Mono<Transaction> dbTransaction = transactionrepo.findById(id);
+		 final Mono<Transaction> dbTransaction = repository.findById(id);
 		  if (Objects.isNull(dbTransaction)) {
 		   return Mono.empty();
 		   
 		  }
-		  delete =  transactionrepo.findById(id).switchIfEmpty(Mono.empty()).filter(Objects::nonNull).flatMap(transactiontoBeDeleted -> transactionrepo
+		  delete =  repository.findById(id).switchIfEmpty(Mono.empty()).filter(Objects::nonNull).flatMap(transactiontoBeDeleted -> repository
 				    .delete(transactiontoBeDeleted).then(Mono.just(transactiontoBeDeleted)));
 		 
 	return delete;
@@ -221,7 +230,7 @@ public class TransactionServiceImpl implements ITransactionService {
 
 	 
 	public Flux<Transaction> findtransaction() {
-		return transactionrepo.findAll();
+		return repository.findAll();
 	}
 	
 
@@ -230,7 +239,7 @@ public class TransactionServiceImpl implements ITransactionService {
 	@Override
 	public Flux<Transaction> findclienttransaction(String idHeadLine, LocalDate dateIni, LocalDate dateEnd) {
 		// TODO Autreposio-generated method stub
-		return transactionrepo.findByTitularAndTransactdateBetween(idHeadLine, dateIni, dateEnd)
+		return repository.findByTitularAndTransactdateBetween(idHeadLine, dateIni, dateEnd)
 				.switchIfEmpty(Mono.error(new Exception("Not process transaction findclienttransaction..")));
 	}
 
@@ -240,7 +249,7 @@ public class TransactionServiceImpl implements ITransactionService {
 	@Override
 	public Mono<Transaction> findtransactionbyid(String id) {
 		// TODO Auto-generated method stub
-		return transactionrepo.findById(id)
+		return repository.findById(id)
 				.switchIfEmpty(Mono.error(new Exception("No process transaction by Id findtransactionbyid..")));
 	}
 
@@ -249,9 +258,9 @@ public class TransactionServiceImpl implements ITransactionService {
 	@Override
 	public Mono<Transaction> updatetransaction(Updatetransactionreq updatetransactionreq) {
 		// TODO Auto-generated method stub
-		return transactionrepo.findById(updatetransactionreq.getId())
+		return repository.findById(updatetransactionreq.getId())
 				.switchIfEmpty(Mono.error(new Exception("No data.")))
-				.flatMap(a->transactionrepo.save(Transaction.builder()
+				.flatMap(a->repository.save(Transaction.builder()
 						.id(a.getId())
 						.prodid(updatetransactionreq.getProdid())
 						.prodtype(updatetransactionreq.getProdtype())
@@ -274,7 +283,7 @@ public class TransactionServiceImpl implements ITransactionService {
 			return  account.filter(acc->acc.getHeadline().contains(tpaymentrequest.getAccounttitular()))
 					.switchIfEmpty(Mono.error(new Exception("Not same account holder - transferpayment")))
 					.flatMap(acc-> 
-			    	  transactionrepo.countTransacByTitular(tpaymentrequest.getAccounttitular()).map(count ->
+					repository.countTransacByTitular(tpaymentrequest.getAccounttitular()).map(count ->
 			    	  {   tpaymentrequest.setCommission(count>=Configtransaction.COMMISSION_FREE_TIMES?Configtransaction.COMMISSION_WITHDRAW_VALUE:0);  
 			    	      return acc;
 			    	  }) 
@@ -293,7 +302,7 @@ public class TransactionServiceImpl implements ITransactionService {
 						      return credwebclient.put().body(BodyInserters.fromValue(cre)).retrieve().bodyToMono(CreditDto.class) ;
 					})
 					.switchIfEmpty(Mono.error(new Exception("Cant process the transcation - credit")))
-					.flatMap(cre->transactionrepo.save(Transaction.builder()
+					.flatMap(cre->repository.save(Transaction.builder()
 		                         .prodid(cre.getId())
 		                   	     .prodtype(tpaymentrequest.getProdtype()) 
 		                   	     .transtype("TRANSPAYMENT")
@@ -327,7 +336,7 @@ public class TransactionServiceImpl implements ITransactionService {
 				    	  return accwebclient.put().body(BodyInserters.fromValue(acc)).retrieve().bodyToMono(BankAccountDto.class);
 				    	  })
 					.switchIfEmpty(Mono.error(new Exception("Cant process the transaction - account")))
-					.flatMap(then-> transactionrepo.save(Transaction.builder()
+					.flatMap(then-> repository.save(Transaction.builder()
 		                    .prodid(then.getId())
 		                    .prodtype(then.getAcctype())
 		                    .transtype("TRANSWITHDRAW")

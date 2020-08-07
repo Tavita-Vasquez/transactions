@@ -7,7 +7,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Data 
@@ -16,6 +18,8 @@ import lombok.ToString;
 @NoArgsConstructor
 @Document
 @ToString 
+@Getter
+@Setter
 public class Consume {
 	  private String id;
 	  private Double amount;
