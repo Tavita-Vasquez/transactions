@@ -1,4 +1,4 @@
-package com.everis.mstransact.expose;
+package ws.rest.springcloud.model.controller;
  
 import java.time.LocalDate; 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient; 
+import org.springframework.web.reactive.function.client.WebClient;
+
+import lombok.extern.java.Log;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.model.Transaction;
@@ -31,17 +33,22 @@ import ws.rest.springcloud.service.impl.TransactionServiceImpl;
 
 @RequestMapping("/rest/apitransaction") 
 @RestController
-public class MstransactionController {
+@Log
+public class TransactionController {
 	
 	@Autowired
 	private TransactionServiceImpl transactservice;
+	
 	private static final String URL_ACCOUNT= "http://localhost:8031/rest/bankAccount";
 	private static final String URL_CUSTOMER= "http://localhost:8030/rest/personalCustomer";
 	private static final String URL_CREDIT="http://localhost:8033/rest/credit";
 	
+	
 	/*Realizar un retiro de dinero de una cuenta*/
 	@PostMapping("/withdraw")
 	public  Mono<Transaction> moneywithdraw(@RequestBody AccwithdrawRequest mwithdrawrequest){ 
+		 log.info("BEGIN method moneywithdraw END BEGIN. ");
+		 
 		Mono<BankAccountDto> accountReq = WebClient.create(URL_ACCOUNT + "/findById/"+mwithdrawrequest.getId())
 				                            .get().retrieve().bodyToMono(BankAccountDto.class);  
 		return transactservice.moneywithdraw(mwithdrawrequest,accountReq, WebClient.create(URL_ACCOUNT+ "/updateaccount"));
@@ -85,6 +92,8 @@ public class MstransactionController {
 	/*Busqueda de todas las transacciones*/
 	@GetMapping("/find")
 	public Flux<Transaction> findtransaction(){
+		System.out.println("::findtransaction::");
+		log.config("Begin findtransaction() - Busqueda de todas las transacciones ......");
 	      return transactservice.findtransaction();
     }
 	

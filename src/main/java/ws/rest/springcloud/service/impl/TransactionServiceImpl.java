@@ -218,7 +218,7 @@ public class TransactionServiceImpl implements ITransactionService {
 	/*1. Busqueda de todas las Transacciones Disponibles (HTTP REQUEST)*/
 	/**/
 
-	@Override
+	 
 	public Flux<Transaction> findtransaction() {
 		return transactionrepo.findAll();
 	}
