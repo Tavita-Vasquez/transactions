@@ -3,6 +3,7 @@ package ws.rest.springcloud.transaction.service;
 import java.time.LocalDate;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Flux;
@@ -20,6 +21,7 @@ import ws.rest.springcloud.transaction.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.transaction.model.request.Updatetransactionreq;
 import ws.rest.springcloud.transaction.model.response.TransactionResponse;
 
+@Service
 public interface ITransactionService{
 	
 	  Mono<TransactionResponse> depositatm(ATMTransactionDTO atmrequest, Mono<BankAccountDto> atmwc, WebClient webclient);
