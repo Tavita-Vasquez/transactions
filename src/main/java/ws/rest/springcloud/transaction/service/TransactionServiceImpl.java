@@ -6,7 +6,8 @@ import java.util.Objects;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource; 
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -31,7 +32,7 @@ import ws.rest.springcloud.transaction.repository.IConsumeRepository;
 import ws.rest.springcloud.transaction.repository.ITransactionRepository;
 
 
-
+@Service
 public class TransactionServiceImpl implements ITransactionService {
 
 	@Autowired
