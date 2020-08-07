@@ -1,4 +1,4 @@
-package ws.rest.springcloud.model.request;
+package ws.rest.springcloud.transaction.model.request;
  
 
 import lombok.AllArgsConstructor;
@@ -10,11 +10,12 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class Creditconsumerequest { 
+public class Creditpaymentrequest {
 	private String id;
 	private String prodtype; 
 	private String titular;
 	private Double amount;
+	
 	public String getId() {
 		return id;
 	}
@@ -38,7 +39,8 @@ public class Creditconsumerequest {
 	}
 	public void setAmount(Double amount) {
 		this.amount = amount;
-	} 
+	}
+	
 	
 	
 }

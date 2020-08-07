@@ -1,4 +1,4 @@
-package ws.rest.springcloud.model.response;
+package ws.rest.springcloud.transaction.model.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

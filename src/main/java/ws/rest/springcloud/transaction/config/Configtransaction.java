@@ -1,4 +1,4 @@
-package ws.rest.springcloud.config; 
+package ws.rest.springcloud.transaction.config; 
   
 public class Configtransaction { 
 	public static final Double COMMISSION_WITHDRAW_VALUE= 10d;

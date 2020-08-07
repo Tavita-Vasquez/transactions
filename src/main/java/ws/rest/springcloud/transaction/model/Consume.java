@@ -1,4 +1,4 @@
-package ws.rest.springcloud.model;
+package ws.rest.springcloud.transaction.model;
 
 import java.time.LocalDate;
 

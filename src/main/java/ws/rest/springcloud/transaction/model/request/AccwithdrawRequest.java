@@ -1,4 +1,4 @@
-package ws.rest.springcloud.model.request;
+package ws.rest.springcloud.transaction.model.request;
  
  
 

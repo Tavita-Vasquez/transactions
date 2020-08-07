@@ -1,4 +1,4 @@
-package ws.rest.springcloud.service.impl;
+package ws.rest.springcloud.transaction.service;
 
 import java.time.LocalDate;
 
@@ -7,18 +7,18 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ws.rest.springcloud.model.Transaction;
-import ws.rest.springcloud.model.dto.ATMTransactionDTO;
-import ws.rest.springcloud.model.dto.BankAccountDto;
-import ws.rest.springcloud.model.dto.CreditDto;
-import ws.rest.springcloud.model.request.AccdepositRequest;
-import ws.rest.springcloud.model.request.AccwithdrawRequest;
-import ws.rest.springcloud.model.request.Creditconsumerequest;
-import ws.rest.springcloud.model.request.Creditpaymentmultibankrequest;
-import ws.rest.springcloud.model.request.Creditpaymentrequest;
-import ws.rest.springcloud.model.request.Transferpaymentrequest;
-import ws.rest.springcloud.model.request.Updatetransactionreq;
-import ws.rest.springcloud.model.response.TransactionResponse;
+import ws.rest.springcloud.transaction.model.Transaction;
+import ws.rest.springcloud.transaction.model.dto.ATMTransactionDTO;
+import ws.rest.springcloud.transaction.model.dto.BankAccountDto;
+import ws.rest.springcloud.transaction.model.dto.CreditDto;
+import ws.rest.springcloud.transaction.model.request.AccdepositRequest;
+import ws.rest.springcloud.transaction.model.request.AccwithdrawRequest;
+import ws.rest.springcloud.transaction.model.request.Creditconsumerequest;
+import ws.rest.springcloud.transaction.model.request.Creditpaymentmultibankrequest;
+import ws.rest.springcloud.transaction.model.request.Creditpaymentrequest;
+import ws.rest.springcloud.transaction.model.request.Transferpaymentrequest;
+import ws.rest.springcloud.transaction.model.request.Updatetransactionreq;
+import ws.rest.springcloud.transaction.model.response.TransactionResponse;
 
 public interface ITransactionService{
 	

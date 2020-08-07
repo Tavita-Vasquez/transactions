@@ -1,4 +1,4 @@
-package ws.rest.springcloud.model.dto;
+package ws.rest.springcloud.transaction.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
