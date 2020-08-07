@@ -8,8 +8,7 @@ import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRep
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ws.rest.springcloud.transaction.model.Transaction;
-
-@EnableReactiveMongoRepositories
+ 
 public interface ITransactionRepository extends ReactiveMongoRepository<Transaction, String> {
 
 	Flux<Transaction> findByTitularAndTransactdateBetween(String idHeadLine, LocalDate dateIni, LocalDate dateEnd);

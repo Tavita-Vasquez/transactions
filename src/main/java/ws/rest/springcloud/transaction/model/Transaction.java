@@ -38,6 +38,7 @@ public class Transaction {
 	private Double commission;
 	private Double postamount;
 	private String bank;
+	private String titular;
 	
 	
 	
