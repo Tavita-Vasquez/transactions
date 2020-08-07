@@ -1,4 +1,4 @@
-package com.everis.mstransact.config; 
+package ws.rest.springcloud.config; 
   
 public class Configtransaction { 
 	public static final Double COMMISSION_WITHDRAW_VALUE= 10d;

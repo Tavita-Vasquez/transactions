@@ -7,11 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import com.everis.mstransact.config.Configtransaction;
+
 import com.google.common.util.concurrent.AtomicDouble;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import ws.rest.springcloud.config.Configtransaction;
 import ws.rest.springcloud.model.Consume;
 import ws.rest.springcloud.model.Transaction;
 import ws.rest.springcloud.model.dto.ATMTransactionDTO;
