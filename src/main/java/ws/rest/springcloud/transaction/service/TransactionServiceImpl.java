@@ -73,6 +73,7 @@ public class TransactionServiceImpl implements ITransactionService {
 			    	  return accwebclient.put().body(BodyInserters.fromValue(refresh)).retrieve().bodyToMono(BankAccountDto.class);
 			      })
 			      .switchIfEmpty(Mono.error(new Exception("Error refresh account")))
+			     .doOnNext(System.out::println)
 			      .flatMap(then->            repository.save(Transaction.builder()
 						                    .prodid(then.getId())
 						                    .prodtype(then.getAcctype())

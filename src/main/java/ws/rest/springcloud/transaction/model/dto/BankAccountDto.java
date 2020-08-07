@@ -24,5 +24,5 @@ public class BankAccountDto {
 	private String acctypedesc;
 	private LocalDate dateaccount;
 	private String bankId; // codigo del banco al que realizará el pago de credito
-		
+	private String titular;	
 }

@@ -1,16 +1,9 @@
 package ws.rest.springcloud.transaction.model.request;
- 
- 
-
-import java.time.LocalDate;
+  
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+ 
 
 @Document
 public class AccwithdrawRequest {
