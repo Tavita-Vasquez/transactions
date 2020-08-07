@@ -31,9 +31,8 @@ import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
 import ws.rest.springcloud.service.impl.TransactionServiceImpl;
 
-@RequestMapping("/rest/apitransaction") 
+@RequestMapping("/rest/transaction") 
 @RestController
-@Log
 public class TransactionController {
 	
 	@Autowired
@@ -47,8 +46,7 @@ public class TransactionController {
 	/*Realizar un retiro de dinero de una cuenta*/
 	@PostMapping("/withdraw")
 	public  Mono<Transaction> moneywithdraw(@RequestBody AccwithdrawRequest mwithdrawrequest){ 
-		 log.info("BEGIN method moneywithdraw END BEGIN. ");
-		 
+		System.out.println("Begin - method moneywithdrar!!");
 		Mono<BankAccountDto> accountReq = WebClient.create(URL_ACCOUNT + "/findById/"+mwithdrawrequest.getId())
 				                            .get().retrieve().bodyToMono(BankAccountDto.class);  
 		return transactservice.moneywithdraw(mwithdrawrequest,accountReq, WebClient.create(URL_ACCOUNT+ "/updateaccount"));
@@ -93,7 +91,7 @@ public class TransactionController {
 	@GetMapping("/find")
 	public Flux<Transaction> findtransaction(){
 		System.out.println("::findtransaction::");
-		log.config("Begin findtransaction() - Busqueda de todas las transacciones ......");
+		
 	      return transactservice.findtransaction();
     }
 	
