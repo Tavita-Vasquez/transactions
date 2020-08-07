@@ -31,7 +31,7 @@ import ws.rest.springcloud.model.request.Transferpaymentrequest;
 import ws.rest.springcloud.model.request.Updatetransactionreq;
 import ws.rest.springcloud.service.impl.TransactionServiceImpl;
 
-@RequestMapping("/rest/transaction") 
+@RequestMapping("/rest/transact") 
 @RestController
 public class TransactionController {
 	
