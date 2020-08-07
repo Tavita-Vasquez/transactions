@@ -1,4 +1,4 @@
-package ws.rest.springcloud.model.controller;
+package ws.rest.springcloud.controller;
  
 import java.time.LocalDate; 
 import org.springframework.beans.factory.annotation.Autowired;
